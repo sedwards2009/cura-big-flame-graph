@@ -1,0 +1,143 @@
+/*
+  Original from vprof https://github.com/nvdv/vprof
+*/
+
+.flame-graph-rect-normal {
+  stroke: black;
+  stroke-width: 1;
+}
+
+.flame-graph-rect-hightlight {
+  stroke: orange;
+  stroke-width: 1;
+}
+
+.flame-graph-no-data-message {
+  background: #BCBCBC;
+  border-radius: 5px;
+  font-size: 16px;
+  top: 50%;
+  left: 50%;
+  opacity: 0.9;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  position: fixed;
+}
+
+body {
+  background: white;
+  font-family: 'Tahoma', Geneva, sans-serif;
+
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  margin: 0px;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+}
+
+DIV.main-tab-header {
+  margin: 8px;
+  flex-grow: 0;
+}
+
+BUTTON {
+  margin-right: 4px;
+}
+
+DIV.main-tab-content {
+  background: white;
+  flex-grow: 1;
+}
+
+a:link {
+  color: #3182BD;
+  text-decoration: none;
+}
+
+a:visited {
+  color: #756BB1;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.tab-content-hidden {
+  display: none;
+}
+
+.tabhelp {
+  background: #BCBCBC;
+  border-radius: 5px;
+  font-size: 16px;
+  top: 50%;
+  left: 50%;
+  opacity: 0.9;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  position: fixed;
+}
+
+.inactive-tabhelp {
+  display: none;
+}
+
+.active-tabhelp {
+  display: block;
+}
+
+svg {
+  font-size: 13px;
+  padding: 5px;
+}
+
+.content-tooltip-visible {
+  display: block;
+}
+
+.content-tooltip-invisible {
+  display: none;
+}
+
+.content-legend {
+  background: #BCBCBC;
+  border: 0px;
+  border-radius: 5px-container;
+  font: 15px sans-serif;
+  opacity: 0.9;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+}
+
+.content-tooltip {
+  background: yellow;
+  border: 0px;
+  border-radius: 5px;
+  font-family: sans-serif;
+  font-size: 12px;
+  padding: 5px;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+}
+
+p {
+  margin: 0px;
+  text-align: left;
+}
+
+#main-progress-indicator {
+  background: url('progress.gif') no-repeat center center;
+  background-color: white;
+  height: 100%;
+  position: absolute;
+  width: 100%;
+}
