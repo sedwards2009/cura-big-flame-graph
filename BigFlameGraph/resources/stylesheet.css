@@ -2,12 +2,16 @@
   Original from vprof https://github.com/nvdv/vprof
 */
 
+.flame-graph-rect-spacer {
+
+}
+
 .flame-graph-rect-normal {
   stroke: black;
   stroke-width: 1;
 }
 
-.flame-graph-rect-hightlight {
+.flame-graph-rect-highlight {
   stroke: orange;
   stroke-width: 1;
 }
@@ -49,9 +53,22 @@ BUTTON {
   margin-right: 4px;
 }
 
+DIV.status {
+  display: inline-block;
+  width: 20em;
+}
+
 DIV.main-tab-content {
   background: white;
   flex-grow: 1;
+  overflow-x: scroll;
+  outline: 1px solid green;
+}
+
+DIV.zoom_level {
+  display: inline-block;
+  width: 5em;
+  text-align: center;
 }
 
 a:link {

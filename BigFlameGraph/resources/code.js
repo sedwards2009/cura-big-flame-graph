@@ -12,6 +12,9 @@ var STATUS_SPAN = "STATUS_SPAN";
 var RECORD_BUTTON = "RECORD_BUTTON";
 var STOP_BUTTON = "STOP_BUTTON";
 var RELOAD_BUTTON = "RELOAD_BUTTON";
+var ZOOM_IN_BUTTON = "ZOOM_IN_BUTTON";
+var ZOOM_OUT_BUTTON = "ZOOM_OUT_BUTTON";
+var ZOOM_MESSAGE = "ZOOM_MESSAGE";
 
 var d3request = d3;
 var d3select = d3;
@@ -19,6 +22,12 @@ var d3hierarchy = d3;
 var d3scale = d3;
 
 var recording = false;
+var MAX_ZOOM = 12;
+var MIN_ZOOM = 0;
+
+
+var zoom_level = 0;
+var profile_data = null;
 
 /**
  * Represents CPU flame graph.
@@ -26,10 +35,10 @@ var recording = false;
  * @param {Object} parent - Parent element for flame graph.
  * @param {Object} data - Data for flame graph rendering.
  */
-function FlameGraph(parent, data) {
+function FlameGraph(parent, data, zoom_level) {
   this.PAD_SIZE = 10;
   this.HEIGHT = parent.node().scrollHeight - this.PAD_SIZE;
-  this.WIDTH = parent.node().scrollWidth - this.PAD_SIZE;
+  this.WIDTH = zoom_level * parent.node().scrollWidth - this.PAD_SIZE;
   this.TEXT_OFFSET_X = 5;
   this.TEXT_OFFSET_Y= 14;
   this.TEXT_CUTOFF = 0.075 * this.WIDTH;
@@ -83,7 +92,13 @@ FlameGraph.prototype.render = function() {
   // Render flame graph nodes.
   var self = this;
   var nodes = cells.append('rect')
-    .attr('class', 'flame-graph-rect-normal')
+    .attr('class', function(d) {
+      if (d.data.stack[0] === "") {
+        return 'flame-graph-rect-spacer';
+      } else {
+        return 'flame-graph-rect-normal';
+      }
+    })
     .attr('x', function(d) { return self.xScale_(d.x0); })
     .attr('y', function(d) { return self.yScale_(1 - d.y0 - (d.y1 - d.y0)); })
     .attr('width', function(d) { return self.xScale_(d.x1 - d.x0); })
@@ -269,9 +284,10 @@ FlameGraph.getTruncatedNodeName_ = function(d, rectLength) {
  * @param {Object} parent - Parent element for flame graph.
  * @param {Object} data - Data for flame graph rendering.
  */
-function renderFlameGraph(data, parent) {
+function renderFlameGraph(data) {
+  var parent = d3select.select('#' + MAIN_CONTENT);
   parent.html("");
-  var flameGraph = new FlameGraph(parent, data);
+  var flameGraph = new FlameGraph(parent, data, zoomLevelToFactor(zoom_level));
   flameGraph.render();
 }
 
@@ -312,13 +328,30 @@ function renderPage() {
     .text('Reload')
     .on('click', handleReloadClick);
 
-  tabHeader.append('span')
+  tabHeader.append('div')
+    .attr('class', 'status')
     .attr('id', STATUS_SPAN);
+
+  tabHeader.append('button')
+    .attr('id', ZOOM_OUT_BUTTON)
+    .text('Zoom out')
+    .on('click', adjustZoomLevel.bind(this, -1))
+
+  tabHeader.append('div')
+    .attr('class', 'zoom_level')
+    .attr('id', ZOOM_MESSAGE)
+    .text("" + Math.floor(100*zoomLevelToFactor(zoom_level)) + "%");
+
+  tabHeader.append('button')
+    .attr('id', ZOOM_IN_BUTTON)
+    .text('Zoom in')
+    .on('click', adjustZoomLevel.bind(this, 1))
 
   d3select.select('body')
     .append('div')
     .attr('class', 'main-tab-content')
-    .attr('id', MAIN_CONTENT);
+    .attr('id', MAIN_CONTENT)
+    .on('wheel', handleWheel);
 }
 
 function handleRecordClick() {
@@ -341,11 +374,43 @@ function handleReloadClick() {
   loadData();
 }
 
+function handleWheel() {
+  var ev = d3.event;
+  ev.stopPropagation();
+  ev.preventDefault();
+  const delta = -Math.sign(ev.deltaY);
+
+  var main_content = d3select.select('#' + MAIN_CONTENT).node();
+  var left_offset = ev.offsetX - main_content.scrollLeft;
+
+  adjustZoomLevel(delta);
+
+  main_content.scrollLeft = zoomCoordAdjust(delta, ev.offsetX) - left_offset;
+}
+
+function adjustZoomLevel(adjustment) {
+  var orig_zoom_level = zoom_level;
+  zoom_level = Math.min(Math.max(zoom_level+adjustment, MIN_ZOOM), MAX_ZOOM);
+  if (orig_zoom_level !== zoom_level) {
+    d3select.select("#" + ZOOM_MESSAGE).text("" + Math.floor(100*zoomLevelToFactor(zoom_level)) + "%");
+    renderFlameGraph(profile_data);
+  }
+}
+
+function zoomLevelToFactor(zoom_level) {
+  return Math.pow(1.5, zoom_level);
+}
+
+function zoomCoordAdjust(adjustment, coord) {
+  return Math.pow(1.5, adjustment) * coord;
+}
+
 function loadData() {
   d3request.json(JSON_URI, function(data) {
     // if (Object.keys(data).length !== 0) {
       // progressIndicator.remove();
-      renderFlameGraph(data.c, d3select.select('#' + MAIN_CONTENT));
+      profile_data = data.c;
+      renderFlameGraph(profile_data);
     // } else {
     //   var timerId = setInterval(function() {
     //     d3request.json(JSON_URI, function(data) {
