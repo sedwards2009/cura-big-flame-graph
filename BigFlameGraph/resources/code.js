@@ -137,70 +137,6 @@ FlameGraph.prototype.render = function() {
       var nodeHeight = this.previousElementSibling.getAttribute('height');
       return nodeHeight > self.MIN_TEXT_HEIGHT ? 'visible': 'hidden';
     });
-
-  // Zoom.
-  nodes.on('click', function(d) { self.zoomIn_(d, nodes, titles); });
-  canvas.on('dblclick', function(d) { self.zoomOut_(nodes, titles); });
-};
-
-/**
- * Handles zoom in.
- * @param {Object} node - Focus node.
- * @param {Object} allNodes - All flame graph nodes.
- * @param {Object} titles - All flame graph node titles.
- */
-FlameGraph.prototype.zoomIn_ = function(node, allNodes, titles) {
-  this.xScale_.domain([node.x0, node.x0 + node.x1 - node.x0]);
-  this.yScale_.domain([0, 1 - node.y0]);
-  var self = this;
-  allNodes.attr('x', function(d) { return self.xScale_(d.x0); })
-    .attr('y', function(d) { return self.yScale_(1 - d.y0 - (d.y1 - d.y0)); })
-    .attr('width', function(d) {
-      return self.xScale_(d.x0 + d.x1 - d.x0) - self.xScale_(d.x0); })
-    .attr('height', function(d) {
-      return self.yScale_(1 - d.y0) -
-             self.yScale_(1 - d.y0 - (d.y1 - d.y0)); });
-  this.redrawTitles_(titles);
-};
-
-/**
- * Handles zoom out.
- * @param {Object} allNodes - All flame graph nodes.
- * @param {Object} titles - All flame graph node titles.
- */
-FlameGraph.prototype.zoomOut_ = function(allNodes, titles) {
-  this.xScale_.domain([0, 1]);
-  this.yScale_.domain([0, 1]);
-  var self = this;
-  allNodes.attr('x', function(d) { return self.xScale_(d.x0); })
-    .attr('y', function(d) { return self.yScale_(1 - d.y0 - (d.y1 - d.y0)); })
-    .attr('width', function(d) { return self.xScale_(d.x1 - d.x0); })
-    .attr('height', function(d) { return self.yScale_(d.y1 - d.y0); });
-  this.redrawTitles_(titles);
-};
-
-/**
- * Redraws node titles based on current xScale and yScale.
- * @param {Object} titles - All flame graph node titles.
- */
-FlameGraph.prototype.redrawTitles_ = function(titles) {
-  var self = this;
-  titles.attr('x', function(d) {
-    return self.xScale_(d.x0) + self.TEXT_OFFSET_X; })
-    .attr('y', function(d) {
-      return self.yScale_(1 - d.y0 - (d.y1 - d.y0)) + self.TEXT_OFFSET_Y; })
-    .text(function(d) {
-      if (d.data.stack[0] === "") {
-        return "";
-      } else {
-        var nodeWidth = self.xScale_(d.x0 + d.x1 - d.x0) - self.xScale_(d.x0);
-        return FlameGraph.getTruncatedNodeName_(d.data, nodeWidth);
-      }
-    })
-    .attr('visibility', function(d) {
-      var nodeHeight = this.previousElementSibling.getAttribute('height');
-      return (nodeHeight > self.MIN_TEXT_HEIGHT) ? 'visible': 'hidden';
-    });
 };
 
 /**
@@ -351,7 +287,10 @@ function renderPage() {
     .append('div')
     .attr('class', 'main-tab-content')
     .attr('id', MAIN_CONTENT)
-    .on('wheel', handleWheel);
+    .on('wheel', handleWheel)
+    .on('mousemove', handleMouseMove)
+    .on('mouseleave' ,handleMouseLeave)
+    .on('mousedown', handleMouseDown);
 }
 
 function handleRecordClick() {
@@ -383,9 +322,9 @@ function handleWheel() {
   var main_content = d3select.select('#' + MAIN_CONTENT).node();
   var left_offset = ev.offsetX - main_content.scrollLeft;
 
-  adjustZoomLevel(delta);
-
-  main_content.scrollLeft = zoomCoordAdjust(delta, ev.offsetX) - left_offset;
+  if (adjustZoomLevel(delta)) {
+    main_content.scrollLeft = zoomCoordAdjust(delta, ev.offsetX) - left_offset;
+  }
 }
 
 function adjustZoomLevel(adjustment) {
@@ -394,6 +333,9 @@ function adjustZoomLevel(adjustment) {
   if (orig_zoom_level !== zoom_level) {
     d3select.select("#" + ZOOM_MESSAGE).text("" + Math.floor(100*zoomLevelToFactor(zoom_level)) + "%");
     renderFlameGraph(profile_data);
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -403,6 +345,29 @@ function zoomLevelToFactor(zoom_level) {
 
 function zoomCoordAdjust(adjustment, coord) {
   return Math.pow(1.5, adjustment) * coord;
+}
+
+var mouse_drag_start_x = null;
+
+function handleMouseMove() {
+  var ev = d3.event;
+  ev.stopPropagation();
+  ev.preventDefault();
+  if (mouse_drag_start_x != null && ev.buttons & 1) { // Is LMB down?
+    var main_content = d3select.select('#' + MAIN_CONTENT).node();
+    main_content.scrollLeft = main_content.scrollLeft - (ev.offsetX - mouse_drag_start_x);
+  }
+}
+
+function handleMouseDown() {
+  var ev = d3.event;
+  ev.stopPropagation();
+  ev.preventDefault();
+  mouse_drag_start_x = ev.offsetX;
+}
+
+function handleMouseLeave() {
+  mouse_drag_start_x = null;
 }
 
 function loadData() {
