@@ -250,12 +250,12 @@ function renderPage() {
 
   tabHeader.append('button')
     .attr('id', RECORD_BUTTON)
-    .text('Record')
+    .html('<span></span> Record')
     .on('click', handleRecordClick);
 
   tabHeader.append('button')
     .attr('id', STOP_BUTTON)
-    .text('Stop')
+    .html('<span></span> Stop')
     .attr('disabled', 'true')
     .on('click', handleStopClick);
 
@@ -320,11 +320,18 @@ function handleWheel() {
   const delta = -Math.sign(ev.deltaY);
 
   var main_content = d3select.select('#' + MAIN_CONTENT).node();
-  var left_offset = ev.offsetX - main_content.scrollLeft;
+  var offsetX = eventRelativeX(ev, main_content);
+
+  var left_offset = offsetX - main_content.scrollLeft;
 
   if (adjustZoomLevel(delta)) {
-    main_content.scrollLeft = zoomCoordAdjust(delta, ev.offsetX) - left_offset;
+    main_content.scrollLeft = zoomCoordAdjust(delta, offsetX) - left_offset;
   }
+}
+
+function eventRelativeX(ev, element) {
+  var frame_rect = element.getBoundingClientRect();
+  return ev.clientX - frame_rect.left + element.scrollLeft;
 }
 
 function adjustZoomLevel(adjustment) {
@@ -355,7 +362,7 @@ function handleMouseMove() {
   ev.preventDefault();
   if (mouse_drag_start_x != null && ev.buttons & 1) { // Is LMB down?
     var main_content = d3select.select('#' + MAIN_CONTENT).node();
-    main_content.scrollLeft = main_content.scrollLeft - (ev.offsetX - mouse_drag_start_x);
+    main_content.scrollLeft = main_content.scrollLeft - (eventRelativeX(ev, main_content) - mouse_drag_start_x);
   }
 }
 
@@ -363,7 +370,8 @@ function handleMouseDown() {
   var ev = d3.event;
   ev.stopPropagation();
   ev.preventDefault();
-  mouse_drag_start_x = ev.offsetX;
+  var main_content = d3select.select('#' + MAIN_CONTENT).node();
+  mouse_drag_start_x = eventRelativeX(ev, main_content);
 }
 
 function handleMouseLeave() {

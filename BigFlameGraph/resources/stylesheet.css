@@ -3,7 +3,6 @@
 */
 
 .flame-graph-rect-spacer {
-
 }
 
 .flame-graph-rect-normal {
@@ -62,7 +61,6 @@ DIV.main-tab-content {
   background: white;
   flex-grow: 1;
   overflow-x: scroll;
-  outline: 1px solid green;
 }
 
 DIV.zoom_level {
@@ -157,4 +155,8 @@ p {
   height: 100%;
   position: absolute;
   width: 100%;
+}
+
+#RECORD_BUTTON > SPAN {
+  color: red;
 }
