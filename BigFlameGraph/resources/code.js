@@ -282,6 +282,11 @@ function renderPage() {
     .on('mousemove', handleMouseMove)
     .on('mouseleave' ,handleMouseLeave)
     .on('mousedown', handleMouseDown);
+
+  window.addEventListener('resize', function() {
+    renderFlameGraph(profile_data);
+  });
+
 }
 
 function handleRecordClick() {
