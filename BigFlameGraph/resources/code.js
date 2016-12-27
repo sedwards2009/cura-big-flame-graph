@@ -54,6 +54,14 @@ function FlameGraph(parent, data, zoom_level) {
   this.data_ = data;
   this.parent_ = parent;
   this.xScale_ = d3scale.scaleLinear().domain([0, 1]).range([0, this.WIDTH]);
+
+  var d3TickFormat = d3.format(",.2");
+  var tickFormat = function(x) { return d3TickFormat(x) + "s"; };
+
+  this.xAxis_ = d3.axisBottom(d3scale.scaleLinear().domain([0, data.runTime]).range([0, this.WIDTH]))
+    .ticks(Math.floor(this.WIDTH/100))
+    .tickFormat(tickFormat);
+
   this.yScale_ = d3scale.scaleLinear().range([0, this.HEIGHT]);
   this.color_ = d3scale.scaleOrdinal(d3scale.schemeCategory20);
   this.flameGraph_ = d3hierarchy.partition();
@@ -67,7 +75,7 @@ FlameGraph.prototype.render = function() {
 
   var tooltip = this.parent_.append('div')
     .attr('class', 'content-tooltip content-tooltip-invisible');
-
+  canvas.append("g").call(this.xAxis_);
   this.renderHelp_();
 
   // Display message and stop if callStats is empty.
@@ -361,8 +369,10 @@ function loadData() {
   d3request.json(JSON_URI, function(data) {
     // if (Object.keys(data).length !== 0) {
       // progressIndicator.remove();
-      profile_data = data.c;
-      renderFlameGraph(profile_data);
+      if (data != null) {
+        profile_data = data.c;
+        renderFlameGraph(profile_data);
+      }
     // } else {
     //   var timerId = setInterval(function() {
     //     d3request.json(JSON_URI, function(data) {
