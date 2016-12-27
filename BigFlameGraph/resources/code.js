@@ -55,7 +55,7 @@ function FlameGraph(parent, data, zoom_level) {
   this.parent_ = parent;
   this.xScale_ = d3scale.scaleLinear().domain([0, 1]).range([0, this.WIDTH]);
 
-  var d3TickFormat = d3.format(",.2");
+  var d3TickFormat = d3.format(",.3");
   var tickFormat = function(x) { return d3TickFormat(x) + "s"; };
 
   this.xAxis_ = d3.axisBottom(d3scale.scaleLinear().domain([0, data.runTime]).range([0, this.WIDTH]))
