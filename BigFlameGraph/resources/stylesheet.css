@@ -52,10 +52,6 @@ BUTTON {
   margin-right: 4px;
 }
 
-DIV.status {
-  display: inline-block;
-  width: 20em;
-}
 
 DIV.main-tab-content {
   background: white;
@@ -158,5 +154,51 @@ p {
 }
 
 #RECORD_BUTTON > SPAN {
-  color: red;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: red;
+  border-radius: 0.5em;
+}
+
+#RECORD_BUTTON:disabled > SPAN {
+  background-color: #808080;
+}
+
+#STOP_BUTTON > SPAN {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: #000000;
+}
+
+#STOP_BUTTON:disabled > SPAN {
+  background-color: #808080;
+}
+
+@keyframes pulse {
+  0%, 45%, 100% {
+    background-color: transparent;
+  }
+
+  50%, 95% {
+    background-color: red;
+  }
+}
+
+#STATUS_DIV {
+  display: inline-block;
+  width: 20em;
+  padding-left: 2em;
+}
+
+#STATUS_DIV.recording:before {
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: red;
+  border-radius: 0.5em;
+
+  animation: pulse 3s infinite;
 }

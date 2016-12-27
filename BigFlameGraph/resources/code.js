@@ -8,10 +8,9 @@ var STOP_URI = 'stop';
 var POLL_INTERVAL = 200;  // msec
 
 var MAIN_CONTENT= "MAIN_CONTENT";
-var STATUS_SPAN = "STATUS_SPAN";
+var STATUS_DIV = "STATUS_DIV";
 var RECORD_BUTTON = "RECORD_BUTTON";
 var STOP_BUTTON = "STOP_BUTTON";
-var RELOAD_BUTTON = "RELOAD_BUTTON";
 var ZOOM_IN_BUTTON = "ZOOM_IN_BUTTON";
 var ZOOM_OUT_BUTTON = "ZOOM_OUT_BUTTON";
 var ZOOM_MESSAGE = "ZOOM_MESSAGE";
@@ -69,7 +68,6 @@ FlameGraph.prototype.render = function() {
   var tooltip = this.parent_.append('div')
     .attr('class', 'content-tooltip content-tooltip-invisible');
 
-  this.renderLegend_();
   this.renderHelp_();
 
   // Display message and stop if callStats is empty.
@@ -163,16 +161,6 @@ FlameGraph.prototype.hideTooltip_ = function(element, tooltip) {
   tooltip.attr('class', 'content-tooltip content-tooltip-invisible');
 };
 
-/** Renders flame graph legend. */
-FlameGraph.prototype.renderLegend_ = function() {
-  this.parent_.append('div')
-    .attr('class', 'content-legend')
-    .html('<p><b>Object name:</b> ' + this.data_.objectName + '</p>' +
-          '<p><b>Run time:</b> ' + Math.floor(this.data_.runTime*1000) + 'ms</p>')
-    .style('left', this.LEGEND_X)
-    .style('top', this.LEGEND_Y);
-};
-
 /** Renders flame graph help. */
 FlameGraph.prototype.renderHelp_ = function() {
   this.parent_.append('div')
@@ -259,14 +247,9 @@ function renderPage() {
     .attr('disabled', 'true')
     .on('click', handleStopClick);
 
-  tabHeader.append('button')
-    .attr('id', RELOAD_BUTTON)
-    .text('Reload')
-    .on('click', handleReloadClick);
-
   tabHeader.append('div')
     .attr('class', 'status')
-    .attr('id', STATUS_SPAN);
+    .attr('id', STATUS_DIV);
 
   tabHeader.append('button')
     .attr('id', ZOOM_OUT_BUTTON)
@@ -294,23 +277,19 @@ function renderPage() {
 }
 
 function handleRecordClick() {
-  d3select.select('#' + STATUS_SPAN).text("Recording...");
+  d3select.select('#' + STATUS_DIV).text("Recording...").classed("recording", true);
   d3select.select('#' + RECORD_BUTTON).attr("disabled", "on");
   d3select.select('#' + STOP_BUTTON).attr("disabled", null);
   d3request.request(RECORD_URI).post("", function(data) {});
 }
 
 function handleStopClick() {
-  d3select.select('#' + STATUS_SPAN).text("");
+  d3select.select('#' + STATUS_DIV).text("").classed("recording", false);
   d3select.select('#' + RECORD_BUTTON).attr("disabled", null);
   d3select.select('#' + STOP_BUTTON).attr("disabled", "on");
   d3request.request(STOP_URI).post("", function(data) {
     loadData();
   });
-}
-
-function handleReloadClick() {
-  loadData();
 }
 
 function handleWheel() {
@@ -401,6 +380,7 @@ function loadData() {
 /** Makes request to server and renders page with received data. */
 function main() {
   renderPage();
+  loadData();
 }
 
 main();
