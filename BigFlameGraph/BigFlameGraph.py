@@ -7,16 +7,20 @@ import webbrowser
 
 from UM.Extension import Extension
 from PyQt5.QtCore import QObject
-from UM import Logger
 import os.path
-from UM import Signal
+from UM import FlameProfiler
 
 class BigFlameGraph(Extension, QObject):
     def __init__(self, parent = None):
         QObject.__init__(self, parent)
         Extension.__init__(self)
-        self.addMenuItem("Start BFG", startBFG)
-        self.addMenuItem("Stop BFG", stopBFG)
+        if FlameProfiler.enabled():
+            self.addMenuItem("Start BFG", startBFG)
+            self.addMenuItem("Stop BFG", stopBFG)
+        else:
+            self.addMenuItem("<Profiling not activated>", noOp)
+
+def noOp(): pass
 
 http_server_thread = None
 PORT = 8000
@@ -39,7 +43,7 @@ class HTTPServerThread(threading.Thread):
         self._httpd = None
 
     def run(self):
-        Signal.clearProfileData()
+        FlameProfiler.clearProfileData()
         server_address = ('', PORT)
         self._httpd = HTTPServer(server_address, BFGHandler)
         webbrowser.open("http://localhost:" + str(PORT))
@@ -62,6 +66,9 @@ resource_mimetype_map = {
     "d3-scale.js": "text/javascript",
     "d3-selection.js": "text/javascript",
     "d3-request.js": "text/javascript",
+    "d3-array.js": "text/javascript",
+    "d3-axis.js": "text/javascript",
+    "d3-format.js": "text/javascript",
     "progress.gif": "image/gif"
 }
 
@@ -93,22 +100,22 @@ class BFGHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == "/record":
-            Signal.clearProfileData()
-            Signal.recordProfileData()
+            FlameProfiler.clearProfileData()
+            FlameProfiler.startRecordingProfileData()
             self.send_response(200)
             self.send_header("Content-type", "text/json")
             self.send_header("Content-Length", 0)
             self.end_headers()
 
         elif self.path == "/stop":
-            Signal.stopRecordProfileData()
+            FlameProfiler.stopRecordingProfileData()
             self.send_response(200)
             self.send_header("Content-type", "text/json")
             self.send_header("Content-Length", 0)
             self.end_headers()
 
     def _handleProfile(self):
-        profile_data = Signal.getProfileData()
+        profile_data = FlameProfiler.getProfileData()
 
         if profile_data is not None:
             str_data = profile_data.toJSON(root=True)
